@@ -318,13 +318,53 @@
     pass1.addEventListener('input', validarPasswords);
     pass2.addEventListener('input', validarPasswords);
 
-    function validarYEnviar() {
+   async function validarYEnviar() {
+        // 1. Validamos las contraseñas primero
         if (pass1.value !== pass2.value) {
             alert('Por favor asegúrate de que las contraseñas coincidan.');
             return;
         }
-        alert('Formulario validado correctamente. Todos los datos están listos para enviarse.');
+
+        // 2. Recopilamos los datos principales del paciente
+        const datosPaciente = {
+            dpi: document.querySelector('input[placeholder="Tu número de DPI"]').value,
+            peso: document.querySelector('input[placeholder="Ej. 150 lb"]').value,
+            estatura: document.querySelector('input[placeholder="Ej. 1.70 m"]').value,
+            sexo: document.querySelector('input[name="sexo"]:checked') ? document.querySelector('input[name="sexo"]:checked').value : "No especificado"
+            // Nota: Más adelante podemos agregar el resto de las 50 preguntas usando un recolector automático
+        };
+
+        // 3. Cambiamos el botón para que el usuario sepa que está cargando
+        const btn = document.querySelector('.btn-submit');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando a Maya-Bot...';
+        btn.disabled = true;
+
+        // 4. EL DISPARO AL SERVIDOR DE PYTHON (Tu Backend)
+        try {
+            const respuesta = await fetch("http://localhost:5000/api/enviar-sintomas", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datosPaciente)
+            });
+
+            const resultado = await respuesta.json();
+            console.log("El Backend respondió:", resultado);
+            
+            if(resultado.estado === "exito") {
+                alert("¡Éxito total! " + resultado.mensaje);
+                document.getElementById("registroForm").reset(); // Limpiamos el formulario
+            }
+
+        } catch (error) {
+            console.error("Error al conectar con el backend:", error);
+            alert("Error: No se pudo conectar con el servidor. ¿Está encendido el Backend de Python?");
+        } finally {
+            // Restauramos el botón a la normalidad
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Crear Cuenta y Enviar Datos';
+            btn.disabled = false;
+        }
     }
+
 </script>
 
 </body>
