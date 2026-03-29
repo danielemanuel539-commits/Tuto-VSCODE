@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cuenta - Historial Médico</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #005bc5;
+            --primary-dark: #003f8a;
+            --secondary: #e6f2ff;
+            --accent: #00b4d8;
+            --text-main: #333333;
+            --bg-body: #f4f7f6;
+            --white: #ffffff;
+            --error: #dc3545;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg-body); margin: 0; padding: 20px; color: var(--text-main); }
+        .container { max-width: 900px; margin: 0 auto; background: var(--white); padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,91,197,0.1); }
+        h1, h2, h3 { color: var(--primary-dark); }
+        h1 { text-align: center; }
+        h2 { border-bottom: 2px solid var(--secondary); padding-bottom: 10px; margin-top: 50px; display: flex; align-items: center; gap: 10px; }
+        h3 { margin-top: 30px; color: var(--primary); font-size: 1.2rem; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .form-row .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--primary-dark); }
+        .form-control { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 8px rgba(0,91,197,0.2); }
+        
+        .question-block { margin-bottom: 20px; background: #fafcff; padding: 15px; border-radius: 10px; border-left: 4px solid var(--accent); }
+        .question-block p { margin: 0 0 10px 0; font-weight: 600; }
+        .options-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        
+        .options-grid input[type="radio"], .options-grid input[type="checkbox"] { display: none; }
+        
+        .box-option {
+            flex: 1 1 auto;
+            text-align: center;
+            padding: 10px 12px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--primary);
+            font-weight: bold;
+            background: var(--white);
+            user-select: none;
+            font-size: 14px;
+        }
+        
+        .box-option:hover { background: var(--secondary); }
+        .options-grid input:checked + .box-option {
+            background: var(--primary); color: var(--white);
+            transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(0,91,197,0.3);
+            border-color: var(--primary-dark);
+        }
+
+        #seccion-hombre, #seccion-mujer { display: none; animation: fadeIn 0.5s; }
+        .error-msg { color: var(--error); font-size: 14px; display: none; margin-top: 5px; font-weight: bold; }
+        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 40px; }
+        .btn-submit:hover { background: var(--primary-dark); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 600px) { .box-option { flex: 1 1 100%; } .form-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1><i class="fa-solid fa-notes-medical"></i> Creación de Cuenta</h1>
+    <p style="text-align:center; color:#666;">Completa tu perfil médico tocando las opciones que correspondan a tu estado de salud.</p>
+
+    <form id="registroForm">
+
+        <h2><i class="fa-solid fa-user"></i> Datos Personales y de Cuenta</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>CUI / DPI (Usuario)</label>
+                <input type="number" class="form-control" required placeholder="Tu número de DPI">
+            </div>
+            <div class="form-group">
+                <label>Nombre Completo</label>
+                <input type="text" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="pass1" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Confirmar Contraseña</label>
+                <input type="password" id="pass2" class="form-control" required>
+                <div id="error-pass" class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> No coinciden.</div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fecha de Nacimiento</label>
+                <input type="date" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Peso (Libras o Kg)</label>
+                <input type="text" class="form-control" required placeholder="Ej. 150 lb">
+            </div>
+            <div class="form-group">
+                <label>Estatura (Metros)</label>
+                <input type="text" class="form-control" required placeholder="Ej. 1.70 m">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="question-block">
+                <p>Sexo (Determinará preguntas específicas):</p>
+                <div class="options-grid">
+                    <input type="radio" name="sexo" id="sexo_m" value="Masculino" required>
+                    <label for="sexo_m" class="box-option"><i class="fa-solid fa-mars"></i> Masculino</label>
+                    <input type="radio" name="sexo" id="sexo_f" value="Femenino">
+                    <label for="sexo_f" class="box-option"><i class="fa-solid fa-venus"></i> Femenino</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="question-block">
+                <p>Tipo de Sangre:</p>
+                <div class="options-grid">
+                    <input type="radio" name="sangre" id="s_a_pos"><label for="s_a_pos" class="box-option">A+</label>
+                    <input type="radio" name="sangre" id="s_a_neg"><label for="s_a_neg" class="box-option">A-</label>
+                    <input type="radio" name="sangre" id="s_b_pos"><label for="s_b_pos" class="box-option">B+</label>
+                    <input type="radio" name="sangre" id="s_b_neg"><label for="s_b_neg" class="box-option">B-</label>
+                    <input type="radio" name="sangre" id="s_ab_pos"><label for="s_ab_pos" class="box-option">AB+</label>
+                    <input type="radio" name="sangre" id="s_ab_neg"><label for="s_ab_neg" class="box-option">AB-</label>
+                    <input type="radio" name="sangre" id="s_o_pos"><label for="s_o_pos" class="box-option">O+</label>
+                    <input type="radio" name="sangre" id="s_o_neg"><label for="s_o_neg" class="box-option">O-</label>
+                    <input type="radio" name="sangre" id="s_nose"><label for="s_nose" class="box-option" style="background: #f8f9fa; color:#666; border-color:#aaa;">NO SÉ</label>
+                </div>
+            </div>
+        </div>
+
+        <h2><i class="fa-solid fa-stethoscope"></i> Evaluación Médica (Últimos 3 meses)</h2>
+
+        <h3>Cabeza</h3>
+        <div class="question-block"><p>Me duele la cabeza sin motivo alguno:</p><div class="options-grid"><input type="radio" name="cab1" id="c1_s"><label for="c1_s" class="box-option">Siempre</label><input type="radio" name="cab1" id="c1_f"><label for="c1_f" class="box-option">Frecuentemente</label><input type="radio" name="cab1" id="c1_o"><label for="c1_o" class="box-option">Ocasionalmente</label><input type="radio" name="cab1" id="c1_n"><label for="c1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Sufro dolores de cabeza:</p><div class="options-grid"><input type="radio" name="cab2" id="c2_s"><label for="c2_s" class="box-option">Siempre</label><input type="radio" name="cab2" id="c2_f"><label for="c2_f" class="box-option">Frecuentemente</label><input type="radio" name="cab2" id="c2_o"><label for="c2_o" class="box-option">Ocasionalmente</label><input type="radio" name="cab2" id="c2_n"><label for="c2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Me duele la cabeza cuando estoy tens@ (exámenes, problemas laborales, etc.):</p><div class="options-grid"><input type="radio" name="cab3" id="c3_s"><label for="c3_s" class="box-option">Siempre</label><input type="radio" name="cab3" id="c3_f"><label for="c3_f" class="box-option">Frecuentemente</label><input type="radio" name="cab3" id="c3_o"><label for="c3_o" class="box-option">Ocasionalmente</label><input type="radio" name="cab3" id="c3_n"><label for="c3_n" class="box-option">No</label></div></div>
+
+        <h3>Ojos</h3>
+        <div class="question-block"><p>Uso lentes (anteojos o de contacto):</p><div class="options-grid"><input type="radio" name="ojo1" id="o1_s"><label for="o1_s" class="box-option">Siempre</label><input type="radio" name="ojo1" id="o1_f"><label for="o1_f" class="box-option">Frecuentemente</label><input type="radio" name="ojo1" id="o1_o"><label for="o1_o" class="box-option">Ocasionalmente</label><input type="radio" name="ojo1" id="o1_n"><label for="o1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Se me cansa la vista (al leer, ver tv, etc.):</p><div class="options-grid"><input type="radio" name="ojo2" id="o2_s"><label for="o2_s" class="box-option">Siempre</label><input type="radio" name="ojo2" id="o2_f"><label for="o2_f" class="box-option">Frecuentemente</label><input type="radio" name="ojo2" id="o2_o"><label for="o2_o" class="box-option">Ocasionalmente</label><input type="radio" name="ojo2" id="o2_n"><label for="o2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Tengo la vista borrosa al leer o identificar objetos lejanos:</p><div class="options-grid"><input type="radio" name="ojo3" id="o3_s"><label for="o3_s" class="box-option">Siempre</label><input type="radio" name="ojo3" id="o3_f"><label for="o3_f" class="box-option">Frecuentemente</label><input type="radio" name="ojo3" id="o3_o"><label for="o3_o" class="box-option">Ocasionalmente</label><input type="radio" name="ojo3" id="o3_n"><label for="o3_n" class="box-option">No</label></div></div>
+
+        <h3>Oídos, Nariz y Garganta</h3>
+        <div class="question-block"><p>Tengo dificultad para escuchar con uno o ambos oídos:</p><div class="options-grid"><input type="radio" name="ong1" id="ong1_s"><label for="ong1_s" class="box-option">Siempre</label><input type="radio" name="ong1" id="ong1_f"><label for="ong1_f" class="box-option">Frecuentemente</label><input type="radio" name="ong1" id="ong1_o"><label for="ong1_o" class="box-option">Ocasionalmente</label><input type="radio" name="ong1" id="ong1_n"><label for="ong1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Padezco de infecciones de garganta:</p><div class="options-grid"><input type="radio" name="ong2" id="ong2_s"><label for="ong2_s" class="box-option">Siempre</label><input type="radio" name="ong2" id="ong2_f"><label for="ong2_f" class="box-option">Frecuentemente</label><input type="radio" name="ong2" id="ong2_o"><label for="ong2_o" class="box-option">Ocasionalmente</label><input type="radio" name="ong2" id="ong2_n"><label for="ong2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Acumulo cerumen:</p><div class="options-grid"><input type="radio" name="ong3" id="ong3_s"><label for="ong3_s" class="box-option">Siempre</label><input type="radio" name="ong3" id="ong3_f"><label for="ong3_f" class="box-option">Frecuentemente</label><input type="radio" name="ong3" id="ong3_o"><label for="ong3_o" class="box-option">Ocasionalmente</label><input type="radio" name="ong3" id="ong3_n"><label for="ong3_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Mantengo secreción nasal (moquera):</p><div class="options-grid"><input type="radio" name="ong4" id="ong4_s"><label for="ong4_s" class="box-option">Siempre</label><input type="radio" name="ong4" id="ong4_f"><label for="ong4_f" class="box-option">Frecuentemente</label><input type="radio" name="ong4" id="ong4_o"><label for="ong4_o" class="box-option">Ocasionalmente</label><input type="radio" name="ong4" id="ong4_n"><label for="ong4_n" class="box-option">No</label></div></div>
+
+        <h3>Alergias</h3>
+        <div class="question-block"><p>El polvo me provoca alergia:</p><div class="options-grid"><input type="radio" name="ale1" id="a1_s"><label for="a1_s" class="box-option">Siempre</label><input type="radio" name="ale1" id="a1_f"><label for="a1_f" class="box-option">Frecuentemente</label><input type="radio" name="ale1" id="a1_o"><label for="a1_o" class="box-option">Ocasionalmente</label><input type="radio" name="ale1" id="a1_n"><label for="a1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Comer mariscos me provoca alergia:</p><div class="options-grid"><input type="radio" name="ale2" id="a2_s"><label for="a2_s" class="box-option">Siempre</label><input type="radio" name="ale2" id="a2_f"><label for="a2_f" class="box-option">Frecuentemente</label><input type="radio" name="ale2" id="a2_o"><label for="a2_o" class="box-option">Ocasionalmente</label><input type="radio" name="ale2" id="a2_n"><label for="a2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>El clima frío me provoca alergia:</p><div class="options-grid"><input type="radio" name="ale3" id="a3_s"><label for="a3_s" class="box-option">Siempre</label><input type="radio" name="ale3" id="a3_f"><label for="a3_f" class="box-option">Frecuentemente</label><input type="radio" name="ale3" id="a3_o"><label for="a3_o" class="box-option">Ocasionalmente</label><input type="radio" name="ale3" id="a3_n"><label for="a3_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Comer cerdo me provoca alergia:</p><div class="options-grid"><input type="radio" name="ale4" id="a4_s"><label for="a4_s" class="box-option">Siempre</label><input type="radio" name="ale4" id="a4_f"><label for="a4_f" class="box-option">Frecuentemente</label><input type="radio" name="ale4" id="a4_o"><label for="a4_o" class="box-option">Ocasionalmente</label><input type="radio" name="ale4" id="a4_n"><label for="a4_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Soy alérgico a la penicilina o aspirina:</p><div class="options-grid"><input type="radio" name="ale5" id="a5_s"><label for="a5_s" class="box-option">Siempre</label><input type="radio" name="ale5" id="a5_f"><label for="a5_f" class="box-option">Frecuentemente</label><input type="radio" name="ale5" id="a5_o"><label for="a5_o" class="box-option">Ocasionalmente</label><input type="radio" name="ale5" id="a5_n"><label for="a5_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>El sol me provoca alergia:</p><div class="options-grid"><input type="radio" name="ale6" id="a6_s"><label for="a6_s" class="box-option">Siempre</label><input type="radio" name="ale6" id="a6_f"><label for="a6_f" class="box-option">Frecuentemente</label><input type="radio" name="ale6" id="a6_o"><label for="a6_o" class="box-option">Ocasionalmente</label><input type="radio" name="ale6" id="a6_n"><label for="a6_n" class="box-option">No</label></div></div>
+
+        <div id="seccion-hombre">
+            <h3>Genitourinario (Hombre)</h3>
+            <div class="question-block"><p>Siento ardor al orinar:</p><div class="options-grid"><input type="radio" name="genh1" id="gh1_s"><label for="gh1_s" class="box-option">Siempre</label><input type="radio" name="genh1" id="gh1_f"><label for="gh1_f" class="box-option">Frecuentemente</label><input type="radio" name="genh1" id="gh1_o"><label for="gh1_o" class="box-option">Ocasionalmente</label><input type="radio" name="genh1" id="gh1_n"><label for="gh1_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Siento dolor al orinar:</p><div class="options-grid"><input type="radio" name="genh2" id="gh2_s"><label for="gh2_s" class="box-option">Siempre</label><input type="radio" name="genh2" id="gh2_f"><label for="gh2_f" class="box-option">Frecuentemente</label><input type="radio" name="genh2" id="gh2_o"><label for="gh2_o" class="box-option">Ocasionalmente</label><input type="radio" name="genh2" id="gh2_n"><label for="gh2_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Padezco de cálculos en los riñones:</p><div class="options-grid"><input type="radio" name="genh3" id="gh3_s"><label for="gh3_s" class="box-option">Siempre</label><input type="radio" name="genh3" id="gh3_f"><label for="gh3_f" class="box-option">Frecuentemente</label><input type="radio" name="genh3" id="gh3_o"><label for="gh3_o" class="box-option">Ocasionalmente</label><input type="radio" name="genh3" id="gh3_n"><label for="gh3_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Tengo problemas en mis testículos:</p><div class="options-grid"><input type="radio" name="genh4" id="gh4_s"><label for="gh4_s" class="box-option">Siempre</label><input type="radio" name="genh4" id="gh4_f"><label for="gh4_f" class="box-option">Frecuentemente</label><input type="radio" name="genh4" id="gh4_o"><label for="gh4_o" class="box-option">Ocasionalmente</label><input type="radio" name="genh4" id="gh4_n"><label for="gh4_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Orino 8 o más veces al día:</p><div class="options-grid"><input type="radio" name="genh5" id="gh5_s"><label for="gh5_s" class="box-option">Siempre</label><input type="radio" name="genh5" id="gh5_f"><label for="gh5_f" class="box-option">Frecuentemente</label><input type="radio" name="genh5" id="gh5_o"><label for="gh5_o" class="box-option">Ocasionalmente</label><input type="radio" name="genh5" id="gh5_n"><label for="gh5_n" class="box-option">No</label></div></div>
+        </div>
+
+        <div id="seccion-mujer">
+            <h3>Genitourinario (Mujer)</h3>
+            <div class="question-block"><p>Padezco de cálculos en los riñones:</p><div class="options-grid"><input type="radio" name="genm1" id="gm1_s"><label for="gm1_s" class="box-option">Siempre</label><input type="radio" name="genm1" id="gm1_f"><label for="gm1_f" class="box-option">Frecuentemente</label><input type="radio" name="genm1" id="gm1_o"><label for="gm1_o" class="box-option">Ocasionalmente</label><input type="radio" name="genm1" id="gm1_n"><label for="gm1_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Mis ciclos menstruales son regulares:</p><div class="options-grid"><input type="radio" name="genm2" id="gm2_s"><label for="gm2_s" class="box-option">Siempre</label><input type="radio" name="genm2" id="gm2_f"><label for="gm2_f" class="box-option">Frecuentemente</label><input type="radio" name="genm2" id="gm2_o"><label for="gm2_o" class="box-option">Ocasionalmente</label><input type="radio" name="genm2" id="gm2_n"><label for="gm2_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Tengo flujo vaginal blanquecino o amarillento:</p><div class="options-grid"><input type="radio" name="genm3" id="gm3_s"><label for="gm3_s" class="box-option">Siempre</label><input type="radio" name="genm3" id="gm3_f"><label for="gm3_f" class="box-option">Frecuentemente</label><input type="radio" name="genm3" id="gm3_o"><label for="gm3_o" class="box-option">Ocasionalmente</label><input type="radio" name="genm3" id="gm3_n"><label for="gm3_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Tengo dolores menstruales intensos:</p><div class="options-grid"><input type="radio" name="genm4" id="gm4_s"><label for="gm4_s" class="box-option">Siempre</label><input type="radio" name="genm4" id="gm4_f"><label for="gm4_f" class="box-option">Frecuentemente</label><input type="radio" name="genm4" id="gm4_o"><label for="gm4_o" class="box-option">Ocasionalmente</label><input type="radio" name="genm4" id="gm4_n"><label for="gm4_n" class="box-option">No</label></div></div>
+            <div class="question-block"><p>Orino 8 o más veces al día:</p><div class="options-grid"><input type="radio" name="genm5" id="gm5_s"><label for="gm5_s" class="box-option">Siempre</label><input type="radio" name="genm5" id="gm5_f"><label for="gm5_f" class="box-option">Frecuentemente</label><input type="radio" name="genm5" id="gm5_o"><label for="gm5_o" class="box-option">Ocasionalmente</label><input type="radio" name="genm5" id="gm5_n"><label for="gm5_n" class="box-option">No</label></div></div>
+        </div>
+
+        <h3>Gastrointestinal</h3>
+        <div class="question-block"><p>Se me embota el estómago:</p><div class="options-grid"><input type="radio" name="gas1" id="g1_s"><label for="g1_s" class="box-option">Siempre</label><input type="radio" name="gas1" id="g1_f"><label for="g1_f" class="box-option">Frecuentemente</label><input type="radio" name="gas1" id="g1_o"><label for="g1_o" class="box-option">Ocasionalmente</label><input type="radio" name="gas1" id="g1_n"><label for="g1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Sufro de agruras:</p><div class="options-grid"><input type="radio" name="gas2" id="g2_s"><label for="g2_s" class="box-option">Siempre</label><input type="radio" name="gas2" id="g2_f"><label for="g2_f" class="box-option">Frecuentemente</label><input type="radio" name="gas2" id="g2_o"><label for="g2_o" class="box-option">Ocasionalmente</label><input type="radio" name="gas2" id="g2_n"><label for="g2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Sufro de diarrea (por más de 3 semanas):</p><div class="options-grid"><input type="radio" name="gas3" id="g3_s"><label for="g3_s" class="box-option">Siempre</label><input type="radio" name="gas3" id="g3_f"><label for="g3_f" class="box-option">Frecuentemente</label><input type="radio" name="gas3" id="g3_o"><label for="g3_o" class="box-option">Ocasionalmente</label><input type="radio" name="gas3" id="g3_n"><label for="g3_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Sufro de estreñimiento:</p><div class="options-grid"><input type="radio" name="gas4" id="g4_s"><label for="g4_s" class="box-option">Siempre</label><input type="radio" name="gas4" id="g4_f"><label for="g4_f" class="box-option">Frecuentemente</label><input type="radio" name="gas4" id="g4_o"><label for="g4_o" class="box-option">Ocasionalmente</label><input type="radio" name="gas4" id="g4_n"><label for="g4_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Las agruras suben hacia la boca:</p><div class="options-grid"><input type="radio" name="gas5" id="g5_s"><label for="g5_s" class="box-option">Siempre</label><input type="radio" name="gas5" id="g5_f"><label for="g5_f" class="box-option">Frecuentemente</label><input type="radio" name="gas5" id="g5_o"><label for="g5_o" class="box-option">Ocasionalmente</label><input type="radio" name="gas5" id="g5_n"><label for="g5_n" class="box-option">No</label></div></div>
+
+        <h3>Músculos y Huesos</h3>
+        <div class="question-block"><p>Tengo dolores de espalda baja:</p><div class="options-grid"><input type="radio" name="mus1" id="m1_s"><label for="m1_s" class="box-option">Siempre</label><input type="radio" name="mus1" id="m1_f"><label for="m1_f" class="box-option">Frecuentemente</label><input type="radio" name="mus1" id="m1_o"><label for="m1_o" class="box-option">Ocasionalmente</label><input type="radio" name="mus1" id="m1_n"><label for="m1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Tengo dolores de cuello:</p><div class="options-grid"><input type="radio" name="mus2" id="m2_s"><label for="m2_s" class="box-option">Siempre</label><input type="radio" name="mus2" id="m2_f"><label for="m2_f" class="box-option">Frecuentemente</label><input type="radio" name="mus2" id="m2_o"><label for="m2_o" class="box-option">Ocasionalmente</label><input type="radio" name="mus2" id="m2_n"><label for="m2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Me duelen las articulaciones (Manos, rodillas):</p><div class="options-grid"><input type="radio" name="mus3" id="m3_s"><label for="m3_s" class="box-option">Siempre</label><input type="radio" name="mus3" id="m3_f"><label for="m3_f" class="box-option">Frecuentemente</label><input type="radio" name="mus3" id="m3_o"><label for="m3_o" class="box-option">Ocasionalmente</label><input type="radio" name="mus3" id="m3_n"><label for="m3_n" class="box-option">No</label></div></div>
+
+        <h2><i class="fa-solid fa-person-running"></i> Hábitos de Vida y Nutrición</h2>
+
+        <div class="question-block"><p>En relación con el consumo de tabaco o Vape:</p><div class="options-grid"><input type="radio" name="hab1" id="h1_s"><label for="h1_s" class="box-option">Sí</label><input type="radio" name="hab1" id="h1_n"><label for="h1_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>En relación con el consumo de alcohol:</p><div class="options-grid"><input type="radio" name="hab2" id="h2_c"><label for="h2_c" class="box-option">Consume</label><input type="radio" name="hab2" id="h2_co"><label for="h2_co" class="box-option">Consumió</label><input type="radio" name="hab2" id="h2_n"><label for="h2_n" class="box-option">No consume</label></div></div>
+        <div class="question-block"><p>Consume drogas (marihuana, cocaína, etc.):</p><div class="options-grid"><input type="radio" name="hab3" id="h3_d"><label for="h3_d" class="box-option">A diario</label><input type="radio" name="hab3" id="h3_s"><label for="h3_s" class="box-option">1 a 3 veces/semana</label><input type="radio" name="hab3" id="h3_o"><label for="h3_o" class="box-option">Ocasionalmente</label><input type="radio" name="hab3" id="h3_n"><label for="h3_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>¿Ha iniciado su vida Sexual?</p><div class="options-grid"><input type="radio" name="hab4" id="h4_s"><label for="h4_s" class="box-option">Sí</label><input type="radio" name="hab4" id="h4_n"><label for="h4_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Si la respuesta anterior fue "Sí", ¿utiliza un método anticonceptivo?</p><div class="options-grid"><input type="radio" name="hab5" id="h5_s"><label for="h5_s" class="box-option">Sí</label><input type="radio" name="hab5" id="h5_n"><label for="h5_n" class="box-option">No</label><input type="radio" name="hab5" id="h5_na"><label for="h5_na" class="box-option" style="border-color:#aaa; color:#666;">No aplica</label></div></div>
+        <div class="question-block"><p>¿Practico actividad física?</p><div class="options-grid"><input type="radio" name="hab6" id="h6_d"><label for="h6_d" class="box-option">A diario</label><input type="radio" name="hab6" id="h6_s"><label for="h6_s" class="box-option">1 a 3 veces/semana</label><input type="radio" name="hab6" id="h6_o"><label for="h6_o" class="box-option">Ocasionalmente</label><input type="radio" name="hab6" id="h6_n"><label for="h6_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Duermes 8 horas (noches):</p><div class="options-grid"><input type="radio" name="hab7" id="h7_s"><label for="h7_s" class="box-option">Siempre</label><input type="radio" name="hab7" id="h7_f"><label for="h7_f" class="box-option">Frecuentemente</label><input type="radio" name="hab7" id="h7_o"><label for="h7_o" class="box-option">Ocasionalmente</label><input type="radio" name="hab7" id="h7_n"><label for="h7_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Por las mañanas, te levantas con energía y descansado:</p><div class="options-grid"><input type="radio" name="hab8" id="h8_s"><label for="h8_s" class="box-option">Siempre</label><input type="radio" name="hab8" id="h8_f"><label for="h8_f" class="box-option">Frecuentemente</label><input type="radio" name="hab8" id="h8_o"><label for="h8_o" class="box-option">Ocasionalmente</label><input type="radio" name="hab8" id="h8_n"><label for="h8_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Frecuencia Nutricional: ¿Cuántas veces come al día?</p><div class="options-grid"><input type="radio" name="nut1" id="n1_1"><label for="n1_1" class="box-option">1 a 2 veces</label><input type="radio" name="nut1" id="n1_2"><label for="n1_2" class="box-option">3 veces</label><input type="radio" name="nut1" id="n1_3"><label for="n1_3" class="box-option">4 o más</label></div></div>
+        <div class="question-block"><p>¿Suele saltarse alguna comida principal?</p><div class="options-grid"><input type="radio" name="nut2" id="n2_s"><label for="n2_s" class="box-option">Sí</label><input type="radio" name="nut2" id="n2_n"><label for="n2_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Calidad de Dieta: ¿Incluye alimentos naturales (proteínas, vegetales) en la mayoría de sus platos?</p><div class="options-grid"><input type="radio" name="nut3" id="n3_s"><label for="n3_s" class="box-option">Sí</label><input type="radio" name="nut3" id="n3_n"><label for="n3_n" class="box-option">No</label></div></div>
+        <div class="question-block"><p>Hidratación: ¿Qué bebe más durante el día?</p><div class="options-grid"><input type="radio" name="nut4" id="n4_a"><label for="n4_a" class="box-option">Agua simple</label><input type="radio" name="nut4" id="n4_b"><label for="n4_b" class="box-option">Bebidas azucaradas/Café</label></div></div>
+        <div class="question-block"><p>Sensaciones: ¿Suele tener buena digestión (sin inflamación o pesadez)?</p><div class="options-grid"><input type="radio" name="nut5" id="n5_s"><label for="n5_s" class="box-option">Sí, buena digestión</label><input type="radio" name="nut5" id="n5_n"><label for="n5_n" class="box-option">No, malestares frecuentes</label></div></div>
+        <div class="question-block"><p>¿Siente que su alimentación le da energía y su peso ha estado estable?</p><div class="options-grid"><input type="radio" name="nut6" id="n6_s"><label for="n6_s" class="box-option">Sí, todo normal</label><input type="radio" name="nut6" id="n6_n"><label for="n6_n" class="box-option">No (sin energía o cambios de peso)</label></div></div>
+
+        <h2><i class="fa-solid fa-file-medical"></i> Antecedentes Personales</h2>
+        <p style="font-size: 14px; color: #666;">Selecciona "Sí" o "No" para cada condición.</p>
+
+        <div class="form-row">
+            <div class="form-group question-block"><p>Problemas de peso (sobrepeso/obesidad)</p><div class="options-grid"><input type="radio" name="ap1" id="ap1_s"><label for="ap1_s" class="box-option">Sí</label><input type="radio" name="ap1" id="ap1_n"><label for="ap1_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Has estado hospitalizado alguna vez?</p><div class="options-grid"><input type="radio" name="ap2" id="ap2_s"><label for="ap2_s" class="box-option">Sí</label><input type="radio" name="ap2" id="ap2_n"><label for="ap2_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Cirugía importante? (apéndice, etc.)</p><div class="options-grid"><input type="radio" name="ap3" id="ap3_s"><label for="ap3_s" class="box-option">Sí</label><input type="radio" name="ap3" id="ap3_n"><label for="ap3_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Dificultad auditiva (sordera parcial/total)?</p><div class="options-grid"><input type="radio" name="ap4" id="ap4_s"><label for="ap4_s" class="box-option">Sí</label><input type="radio" name="ap4" id="ap4_n"><label for="ap4_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Problemas de visión (astigmatismo, daltonismo, etc.)?</p><div class="options-grid"><input type="radio" name="ap5" id="ap5_s"><label for="ap5_s" class="box-option">Sí</label><input type="radio" name="ap5" id="ap5_n"><label for="ap5_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Diagnosticado con asma u otra enf. respiratoria?</p><div class="options-grid"><input type="radio" name="ap6" id="ap6_s"><label for="ap6_s" class="box-option">Sí</label><input type="radio" name="ap6" id="ap6_n"><label for="ap6_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Sufres de alergias respiratorias como rinitis?</p><div class="options-grid"><input type="radio" name="ap7" id="ap7_s"><label for="ap7_s" class="box-option">Sí</label><input type="radio" name="ap7" id="ap7_n"><label for="ap7_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Problemas digestivos (reflujo, úlcera, etc.)?</p><div class="options-grid"><input type="radio" name="ap8" id="ap8_s"><label for="ap8_s" class="box-option">Sí</label><input type="radio" name="ap8" id="ap8_n"><label for="ap8_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Infección de transmisión sexual (VPH, sífilis, etc.)?</p><div class="options-grid"><input type="radio" name="ap9" id="ap9_s"><label for="ap9_s" class="box-option">Sí</label><input type="radio" name="ap9" id="ap9_n"><label for="ap9_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Convulsiones o crisis epilépticas?</p><div class="options-grid"><input type="radio" name="ap10" id="ap10_s"><label for="ap10_s" class="box-option">Sí</label><input type="radio" name="ap10" id="ap10_n"><label for="ap10_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Sufres de migrañas frecuentes?</p><div class="options-grid"><input type="radio" name="ap11" id="ap11_s"><label for="ap11_s" class="box-option">Sí</label><input type="radio" name="ap11" id="ap11_n"><label for="ap11_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Discapacidad física o sensorial reconocida?</p><div class="options-grid"><input type="radio" name="ap12" id="ap12_s"><label for="ap12_s" class="box-option">Sí</label><input type="radio" name="ap12" id="ap12_n"><label for="ap12_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Problemas dermatológicos como acné u otros?</p><div class="options-grid"><input type="radio" name="ap13" id="ap13_s"><label for="ap13_s" class="box-option">Sí</label><input type="radio" name="ap13" id="ap13_n"><label for="ap13_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Fue afectado por COVID-19?</p><div class="options-grid"><input type="radio" name="ap14" id="ap14_s"><label for="ap14_s" class="box-option">Sí</label><input type="radio" name="ap14" id="ap14_n"><label for="ap14_n" class="box-option">No</label></div></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group question-block"><p>¿Padece de vértigo o mareo?</p><div class="options-grid"><input type="radio" name="ap15" id="ap15_s"><label for="ap15_s" class="box-option">Sí</label><input type="radio" name="ap15" id="ap15_n"><label for="ap15_n" class="box-option">No</label></div></div>
+            <div class="form-group question-block"><p>¿Si es mujer, se encuentra embarazada o lactando?</p><div class="options-grid"><input type="radio" name="ap16" id="ap16_s"><label for="ap16_s" class="box-option">Sí</label><input type="radio" name="ap16" id="ap16_n"><label for="ap16_n" class="box-option">No</label><input type="radio" name="ap16" id="ap16_na"><label for="ap16_na" class="box-option" style="border-color:#aaa; color:#666;">No aplica</label></div></div>
+        </div>
+        <div class="question-block">
+            <p>¿Se encuentra medicado actualmente?</p>
+            <div class="options-grid" style="margin-bottom: 10px;">
+                <input type="radio" name="ap17" id="ap17_s"><label for="ap17_s" class="box-option">Sí</label>
+                <input type="radio" name="ap17" id="ap17_n"><label for="ap17_n" class="box-option">No</label>
+            </div>
+            <input type="text" class="form-control" placeholder="Si la respuesta es Sí, especifique qué medicamento..." style="margin-top: 10px;">
+        </div>
+
+        <h2><i class="fa-solid fa-people-roof"></i> Antecedentes Familiares</h2>
+        <p style="font-size: 14px; color: #666;">Selecciona a los familiares afectados (puedes marcar más de uno).</p>
+        
+        <div class="question-block"><p>Presión Alta:</p><div class="options-grid"><input type="checkbox" id="f1_m"><label for="f1_m" class="box-option">Madre</label><input type="checkbox" id="f1_p"><label for="f1_p" class="box-option">Padre</label><input type="checkbox" id="f1_a"><label for="f1_a" class="box-option">Abuelos</label><input type="checkbox" id="f1_h"><label for="f1_h" class="box-option">Hermanos</label><input type="checkbox" id="f1_n"><label for="f1_n" class="box-option" style="background:#f8f9fa; border-color:#aaa;">Ninguno</label></div></div>
+        <div class="question-block"><p>Diabetes:</p><div class="options-grid"><input type="checkbox" id="f2_m"><label for="f2_m" class="box-option">Madre</label><input type="checkbox" id="f2_p"><label for="f2_p" class="box-option">Padre</label><input type="checkbox" id="f2_a"><label for="f2_a" class="box-option">Abuelos</label><input type="checkbox" id="f2_h"><label for="f2_h" class="box-option">Hermanos</label><input type="checkbox" id="f2_n"><label for="f2_n" class="box-option" style="background:#f8f9fa; border-color:#aaa;">Ninguno</label></div></div>
+        <div class="question-block"><p>Derrame Cerebral:</p><div class="options-grid"><input type="checkbox" id="f3_m"><label for="f3_m" class="box-option">Madre</label><input type="checkbox" id="f3_p"><label for="f3_p" class="box-option">Padre</label><input type="checkbox" id="f3_a"><label for="f3_a" class="box-option">Abuelos</label><input type="checkbox" id="f3_h"><label for="f3_h" class="box-option">Hermanos</label><input type="checkbox" id="f3_n"><label for="f3_n" class="box-option" style="background:#f8f9fa; border-color:#aaa;">Ninguno</label></div></div>
+        <div class="question-block"><p>Infarto Cardiaco:</p><div class="options-grid"><input type="checkbox" id="f4_m"><label for="f4_m" class="box-option">Madre</label><input type="checkbox" id="f4_p"><label for="f4_p" class="box-option">Padre</label><input type="checkbox" id="f4_a"><label for="f4_a" class="box-option">Abuelos</label><input type="checkbox" id="f4_h"><label for="f4_h" class="box-option">Hermanos</label><input type="checkbox" id="f4_n"><label for="f4_n" class="box-option" style="background:#f8f9fa; border-color:#aaa;">Ninguno</label></div></div>
+        <div class="question-block"><p>Cáncer:</p><div class="options-grid"><input type="checkbox" id="f5_m"><label for="f5_m" class="box-option">Madre</label><input type="checkbox" id="f5_p"><label for="f5_p" class="box-option">Padre</label><input type="checkbox" id="f5_a"><label for="f5_a" class="box-option">Abuelos</label><input type="checkbox" id="f5_h"><label for="f5_h" class="box-option">Hermanos</label><input type="checkbox" id="f5_n"><label for="f5_n" class="box-option" style="background:#f8f9fa; border-color:#aaa;">Ninguno</label></div></div>
+        <div class="question-block"><p>VIH / SIDA:</p><div class="options-grid"><input type="checkbox" id="f6_m"><label for="f6_m" class="box-option">Madre</label><input type="checkbox" id="f6_p"><label for="f6_p" class="box-option">Padre</label><input type="checkbox" id="f6_a"><label for="f6_a" class="box-option">Abuelos</label><input type="checkbox" id="f6_h"><label for="f6_h" class="box-option">Hermanos</label><input type="checkbox" id="f6_n"><label for="f6_n" class="box-option" style="background:#f8f9fa; border-color:#aaa;">Ninguno</label></div></div>
+
+        <h2><i class="fa-solid fa-hands-bubbles"></i> Hábitos Higiénicos</h2>
+        <div class="question-block"><p>Me lavo las manos con agua y jabón, incluso después de ir al baño:</p><div class="options-grid"><input type="radio" name="hig1" id="hi1_s"><label for="hi1_s" class="box-option">Siempre</label><input type="radio" name="hig1" id="hi1_f"><label for="hi1_f" class="box-option">Frecuentemente</label><input type="radio" name="hig1" id="hi1_o"><label for="hi1_o" class="box-option">Ocasionalmente</label><input type="radio" name="hig1" id="hi1_n"><label for="hi1_n" class="box-option">No</label></div></div>
+
+        <button type="button" class="btn-submit" onclick="validarYEnviar()">Crear Cuenta Médica</button>
+
+    </form>
+</div>
+
+<script>
+    // Mostrar preguntas según el sexo
+    const radiosSexo = document.querySelectorAll('input[name="sexo"]');
+    const secHombre = document.getElementById('seccion-hombre');
+    const secMujer = document.getElementById('seccion-mujer');
+
+    radiosSexo.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'Masculino') {
+                secHombre.style.display = 'block';
+                secMujer.style.display = 'none';
+            } else {
+                secHombre.style.display = 'none';
+                secMujer.style.display = 'block';
+            }
+        });
+    });
+
+    // Validación de contraseñas
+    const pass1 = document.getElementById('pass1');
+    const pass2 = document.getElementById('pass2');
+    const errorPass = document.getElementById('error-pass');
+
+    function validarPasswords() {
+        if (pass2.value.length > 0 && pass1.value !== pass2.value) {
+            errorPass.style.display = 'block';
+            pass2.style.borderColor = 'var(--error)';
+        } else {
+            errorPass.style.display = 'none';
+            pass2.style.borderColor = '#ccc';
+        }
+    }
+
+    pass1.addEventListener('input', validarPasswords);
+    pass2.addEventListener('input', validarPasswords);
+
+    function validarYEnviar() {
+        if (pass1.value !== pass2.value) {
+            alert('Por favor asegúrate de que las contraseñas coincidan.');
+            return;
+        }
+        alert('Formulario validado correctamente. Todos los datos están listos para enviarse.');
+    }
+</script>
+
+</body>
+</html>

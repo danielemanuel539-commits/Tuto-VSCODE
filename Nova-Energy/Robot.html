@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot IA con Gemini - Animado</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #050505; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* --- CARA DEL ROBOT --- */
+        #robot-face {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: all 0.3s ease; position: relative; /* Para animaciones de movimiento */
+        }
+        .eyes { display: flex; gap: 50px; margin-bottom: 30px; transition: transform 0.3s ease-out; }
+        .eye {
+            width: 120px; height: 140px; background-color: #4da6ff;
+            border-radius: 40% 40% 50% 50%; /* Forma base de sonrisa */
+            box-shadow: 0 0 30px #4da6ff;
+            animation: blink 6s infinite; /* Parpadeo base más lento */
+            transition: all 0.3s;
+        }
+        .mouth {
+            width: 80px; height: 10px; border-bottom: 8px solid #4da6ff;
+            border-radius: 0 0 50px 50px; transition: all 0.1s;
+            box-shadow: 0 5px 15px rgba(77, 166, 255, 0.5);
+        }
+
+        /* --- ESTADOS DE INTERACCIÓN --- */
+        /* Animación cuando habla (Boca redonda) */
+        .speaking .mouth { height: 40px; background-color: #4da6ff; border-radius: 40px; border-bottom: none; }
+        /* Animación cuando piensa (Ojos pequeños y redondos, boca quieta) */
+        .thinking .eye { height: 60px; border-radius: 50%; margin-top: 40px; }
+        .thinking .eyes { animation: none; /* Detiene cualquier movimiento idle */ }
+
+        /* --- ESTADOS IDLE (INACTIVIDAD ALEATORIA) --- */
+        /* 1. Curioso: Mira alrededor, puchero sutil */
+        .idle-curious .eyes { animation: lookAround 4s infinite; }
+        .idle-curious .mouth { 
+            border-bottom: none; border-top: 8px solid #4da6ff; 
+            border-radius: 50px 50px 0 0; transform: translateY(-10px); 
+            box-shadow: 0 -5px 15px rgba(77, 166, 255, 0.5);
+        }
+
+        /* 2. Aburrido: Ojos entrecerrados, parpadeo muy lento */
+        .idle-bored .eye { transform: scaleY(0.7); animation: slowBlink 8s infinite; }
+
+        /* 3. Jugando/Sorprendido: Boca en "O", parpadeo rápido */
+        .idle-play .mouth { height: 30px; border-radius: 50%; }
+        .idle-play .eye { animation: fastBlink 1s infinite; }
+
+        /* 4. Soñando/Cambio de Color: Color morado */
+        .idle-dreaming { animation: colorShift 5s infinite; }
+        .idle-dreaming .eye, .idle-dreaming .mouth { background-color: #a64dff; border-color: #a64dff; box-shadow: 0 0 30px #a64dff; }
+
+        /* --- KEYFRAMES DE ANIMACIONES --- */
+        @keyframes blink {
+            0%, 95%, 97%, 100% { transform: scaleY(1); }
+            96%, 98% { transform: scaleY(0.1); }
+        }
+        @keyframes slowBlink {
+            0%, 96%, 98%, 100% { transform: scaleY(0.7); }
+            97%, 99% { transform: scaleY(0.1); }
+        }
+        @keyframes fastBlink {
+            0%, 50%, 70%, 100% { transform: scaleY(1); }
+            60%, 80% { transform: scaleY(0.1); }
+        }
+        @keyframes lookAround {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(15px, 0); }
+            40% { transform: translate(-15px, 0); }
+            60% { transform: translate(0, 5px); }
+            80% { transform: translate(0, -5px); }
+            100% { transform: translate(0, 0); }
+        }
+        @keyframes colorShift {
+            0% { box-shadow: 0 0 30px #4da6ff; }
+            50% { box-shadow: 0 0 30px #a64dff; }
+            100% { box-shadow: 0 0 30px #4da6ff; }
+        }
+
+        /* --- INTERFAZ Y CONTROLES (Sin cambios) --- */
+        #ui-container {
+            background: #1a1a1a; padding: 15px; border-radius: 20px 20px 0 0;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .controls { display: flex; justify-content: center; gap: 15px; }
+        button, label.btn {
+            background: #333; color: white; border: none; padding: 12px 20px;
+            border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        button:hover, label.btn:hover { background: #4da6ff; color: #000; }
+        .active-btn { background: #4da6ff; color: #000; box-shadow: 0 0 10px #4da6ff; }
+        
+        #chat-mode { display: none; display: flex; gap: 10px; }
+        #chat-mode.hidden { display: none; }
+        input[type="text"] { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #333; color: white; outline: none; }
+        input[type="file"] { display: none; }
+        
+        #status-text { text-align: center; font-size: 14px; color: #aaa; min-height: 20px; }
+        #image-preview { max-width: 50px; border-radius: 8px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="robot-face">
+        <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+        </div>
+        <div class="mouth" id="mouth"></div>
+    </div>
+
+    <div id="ui-container">
+        <div id="status-text">Listo.</div>
+        
+        <div style="display: flex; justify-content: center;">
+            <img id="image-preview" src="" alt="preview"/>
+        </div>
+
+        <div class="controls">
+            <button id="btn-voice" onclick="toggleVoice()">🎤 Escuchar</button>
+            
+            <label class="btn" for="camera-input">📷 Foto</label>
+            <input type="file" id="camera-input" accept="image/*" capture="environment">
+
+            <button id="btn-toggle-chat" onclick="toggleChatMode()">💬 Teclado</button>
+        </div>
+
+        <div id="chat-mode" class="hidden">
+            <input type="text" id="text-input" placeholder="Escribe un mensaje aquí...">
+            <button onclick="sendTextMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE GEMINI ---
+        // ¡REEMPLAZA ESTO CON TU API KEY DE GOOGLE AI STUDIO!
+        const API_KEY = 'AIzaSyBMhZUZfTJt6E_i-xdKRfmXskdlHZI5kHw'; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+        // --- VARIABLES GLOBALES ---
+        const robotFace = document.getElementById('robot-face');
+        const statusText = document.getElementById('status-text');
+        const chatMode = document.getElementById('chat-mode');
+        const textInput = document.getElementById('text-input');
+        const cameraInput = document.getElementById('camera-input');
+        const imagePreview = document.getElementById('image-preview');
+        
+        let currentImage = null; // Guardará la imagen tomada en base64
+        let isListening = false;
+        
+        // --- GESTIÓN DE INACTIVIDAD Y ANIMACIONES IDLE ---
+        let idleTimeout; // Temporizador principal de inactividad
+        let idleAnimDurationTimeout; // Temporizador de duración de una animación idle
+        const IDLE_START_DELAY = 10000; // 10 segundos de inactividad antes de animarse
+        const IDLE_ANIM_DURATION = 4000; // Cada animación idle dura 4 segundos
+        let currentIdleClass = ''; // La clase idle activa actual
+        
+        // Clases CSS de las animaciones idle disponibles
+        const idleAnimClasses = ['idle-curious', 'idle-bored', 'idle-play', 'idle-dreaming'];
+
+        // Detiene todas las animaciones de inactividad
+        function stopAllIdle() {
+            if (currentIdleClass) {
+                robotFace.classList.remove(currentIdleClass);
+                currentIdleClass = '';
+            }
+            clearTimeout(idleTimeout);
+            clearTimeout(idleAnimDurationTimeout);
+        }
+
+        // Reinicia el temporizador de inactividad. Llamar tras cada interacción.
+        function resetIdleTimer() {
+            stopAllIdle();
+            // Programa la siguiente animación idle si hay inactividad por 10s
+            idleTimeout = setTimeout(triggerRandomIdle, IDLE_START_DELAY);
+        }
+
+        // Elige y aplica una animación idle al azar
+        function triggerRandomIdle() {
+            // No se anima si está pensando, hablando o escuchando activamente
+            if (robotFace.classList.contains('thinking') || robotFace.classList.contains('speaking') || isListening) {
+                return;
+            }
+
+            // Elige una clase al azar, asegurándose de no repetir la anterior
+            let newIdleClass;
+            do {
+                const randomIndex = Math.floor(Math.random() * idleAnimClasses.length);
+                newIdleClass = idleAnimClasses[randomIndex];
+            } while (newIdleClass === currentIdleClass && idleAnimClasses.length > 1);
+
+            // Aplica la nueva animación
+            currentIdleClass = newIdleClass;
+            robotFace.classList.add(currentIdleClass);
+            statusText.innerText = `Idle: ${currentIdleClass.split('-')[1]}...`; // Opcional: mostrar estado
+
+            // Programa el fin de la animación y el inicio del siguiente ciclo
+            idleAnimDurationTimeout = setTimeout(endIdleAnim, IDLE_ANIM_DURATION);
+        }
+
+        // Finaliza la animación idle actual y reinicia el bucle de inactividad
+        function endIdleAnim() {
+            robotFace.classList.remove(currentIdleClass);
+            currentIdleClass = '';
+            statusText.innerText = "Listo.";
+            resetIdleTimer(); // Vuelve a contar para la próxima animación
+        }
+
+        // --- RECONOCIMIENTO Y SÍNTESIS DE VOZ ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        if(recognition) {
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                statusText.innerText = `Escuché: "${transcript}"`;
+                sendToGemini(transcript);
+            };
+            recognition.onspeechend = () => stopListening();
+            recognition.onerror = () => { 
+                statusText.innerText = "Error al escuchar."; 
+                stopListening(); 
+                resetIdleTimer(); // Reinicia el temporizador tras un error
+            };
+        } else {
+            statusText.innerText = "Tu navegador no soporta entrada de voz. Usa el chat.";
+        }
+
+        function toggleVoice() {
+            if (!recognition) return;
+            stopAllIdle(); // Interrumpir animación idle
+            if (isListening) {
+                stopListening();
+            } else {
+                recognition.start();
+                isListening = true;
+                document.getElementById('btn-voice').classList.add('active-btn');
+                statusText.innerText = "Escuchando...";
+            }
+        }
+
+        function stopListening() {
+            if(recognition) recognition.stop();
+            isListening = false;
+            document.getElementById('btn-voice').classList.remove('active-btn');
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'es-ES';
+            speech.rate = 1.1; // Sutilmente robótico
+            
+            speech.onstart = () => {
+                stopAllIdle(); // Interrumpir animación idle
+                robotFace.classList.add('speaking');
+            };
+            speech.onend = () => {
+                robotFace.classList.remove('speaking');
+                resetIdleTimer(); // Reinicia el temporizador tras hablar
+            };
+            
+            window.speechSynthesis.speak(speech);
+        }
+
+        // --- INTERFAZ ---
+        function toggleChatMode() {
+            stopAllIdle(); // Interrumpir animación idle
+            chatMode.classList.toggle('hidden');
+        }
+
+        // --- CÁMARA E IMÁGENES ---
+        cameraInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            stopAllIdle(); // Interrumpir animación idle
+
+            // Mostrar previsualización
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreview.style.display = 'block';
+            statusText.innerText = "Foto lista. Escribe o habla para enviarla a la IA.";
+
+            // Convertir a base64 para Gemini
+            currentImage = await fileToGenerativePart(file);
+        });
+
+        function fileToGenerativePart(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve({
+                    inlineData: { data: reader.result.split(",")[1], mimeType: file.type }
+                });
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- LÓGICA DE GEMINI ---
+        function sendTextMessage() {
+            const text = textInput.value;
+            if (!text) return;
+            textInput.value = '';
+            stopAllIdle(); // Interrumpir animación idle
+            sendToGemini(text);
+        }
+
+        async function sendToGemini(promptText) {
+            statusText.innerText = "Pensando...";
+            stopAllIdle(); // Interrumpir animación idle
+            robotFace.classList.add('thinking'); // Expresión de los ojos
+
+            const requestBody = {
+                contents: [{
+                    parts: [{ text: promptText }]
+                }]
+            };
+
+            // Si hay una foto, la agregamos a la petición
+            if (currentImage) {
+                requestBody.contents[0].parts.push(currentImage);
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+                const aiResponse = data.candidates[0].content.parts[0].text;
+                
+                statusText.innerText = "Respondiendo...";
+                robotFace.classList.remove('thinking');
+                
+                // Limpiar la foto para la siguiente interacción
+                currentImage = null;
+                imagePreview.style.display = 'none';
+                
+                // Hablar la respuesta
+                speakText(aiResponse);
+
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = "Error al conectar con la IA.";
+                robotFace.classList.remove('thinking');
+                resetIdleTimer(); // Reinicia el temporizador tras un error
+            }
+        }
+
+        // --- INICIALIZACIÓN ---
+        window.onload = () => {
+            resetIdleTimer(); // Comienza a contar inactividad al cargar la página
+        };
+    </script>
+</body>
+</html>
